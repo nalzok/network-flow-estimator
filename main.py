@@ -149,7 +149,6 @@ def regression():
     panel = (pl.read_csv("data/ehec_data.csv")
              .with_columns((pl.col("year") >= pl.col("yexp2")).fill_null(False).alias("treated")))
 
-    # Y_{it} = alpha_i + lambda_t + D_{it} beta + epsilon_{it}
     X = panel.select(("year", "stfips", "treated")).to_dummies(("year", "stfips")).to_numpy()
     assert X.shape[-1] == panel["year"].n_unique() + panel["stfips"].n_unique() + 1
     Y = panel["dins"].to_numpy()
@@ -160,10 +159,12 @@ def regression():
 
 def main():
     # Estimate the homogeneous treatment effect directly with linear regression
+    # Y_{it} = alpha_i + lambda_t + D_{it} beta + epsilon_{it}
     beta_hat_homogeneous = regression()
     print(f"{beta_hat_homogeneous.item() = }")
 
     # Estimate the heterogeneous treatment effects with linear regression
+    # Y_{it} = alpha_i + lambda_t + D_{it} beta_{ij} + epsilon_{it}
     dins_hat_treated, eff_res_treated = estimate(True)
     dins_hat_control, eff_res_control = estimate(False)
     treatment_effect_hat = dins_hat_treated - dins_hat_control
